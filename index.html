@@ -4,16 +4,57 @@
     <meta charset="utf-8">
     <title>What We Talk About When We Talk About Beethoven</title>
 
-    <link href="css/main.css" rel="stylesheet">
+    <!-- <link href="css/main.css" rel="stylesheet"> -->
 </head>
 
 <body>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+
+<script type="text/javascript">
+
+
+function trim (str) {
+    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+$(document).ready(function(){
+
+    $("#textarea-input").keypress(function(e) {
+        if(e.which == 13) {
+            var the_string = $("#textarea-input").val();
+            the_string = trim(the_string);
+
+            var current_text = $('#text-log').html();
+
+            console.log(current_text);
+            var text_array = current_text.split('<br>');
+            console.log(text_array.length);
+            if (text_array.length > 10) {
+                 text_array.shift();   
+            }
+
+            current_text = ''
+            for (var i = 0; i < text_array.length; i++) {
+                current_text = current_text + text_array[i] + '<br>';
+            }
+
+            var new_html = current_text + the_string
+            $('#text-log').html(new_html);
+
+            $("#textarea-input").val('');
+        }
+    });
+
+});
+
+</script>
 
 <div id="title">
+     <h2>What We Talk About When We Talk About Beethoven</h2>
 </div>
 
 <div id="splash-image">
+    <img src="splash.jpg">
 </div>
 
 
@@ -21,12 +62,17 @@
 </div>
 
 <div id="text-input">
+    <textarea id="textarea-input" rows="7" cols="60">
+...what do you think of the Seventh Symphony?
+    </textarea>
 </div>
 
 <div id="buttons">
 </div>
 
 <div id="about">
+<p> What We Talk About When We Talk About Beethoven is a piece for human and human, or human and chatbot.</p>
+<p> WWTAWWTAB works best in Chrome.</p>
 
 </div>
 
