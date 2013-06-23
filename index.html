@@ -14,13 +14,34 @@
 <script type="text/javascript">
 
 
-function trim (str) {
+
+function trim(str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
+
+function getMax(theArray) {
+    return Math.max.apply( Math, theArray );
+}
+
+function getRandomElement(theArray) {
+    return theArray[Math.floor(Math.random()*theArray.length)];
+}
+
+function intsToNotes(the_int){
+    return {'0': 'c', '1': 'c#', '2': 'd', '3': 'eb', '4': 'e', '5': 'f', '6': 'f#', '7': 'g', '8': 'ab', '9': 'a', '10': 'bb', '11': 'b'}[the_int];
+
+    } 
+
+function notesToInts(the_note) {
+    return {'c': '0', 'c#': '1', 'd': '2', 'eb': '3', 'e': '4', 'f': '5', 'f#': '6', 'g': '7', 'ab': '8', 'a': '9', 'bb': '10', 'b': '11',}[the_note]
+}
+
 
 function info(str) {
     $("#info").text(str);
 }
+
+
 
 
 
@@ -32,6 +53,8 @@ var trackURL = 'audio/beethoven_7_I.mp3'
 var remixer;
 var player;
 var track;
+
+var organized_segments = {};
 
 
 var startingText = "...what do you think of the Seventh Symphony?";
@@ -47,9 +70,32 @@ function parseInput(theString) {
 
     var microchunks = Array();
     for (var i = 0; i < letters.length; i++ ) {
-        if (letters[i] == "a") {
-            console.log("yep");
-            microchunks.push(track.analysis.beats[15]);
+        // Deal with A-G
+        if (letters[i].toLowerCase().charCodeAt() >= 97 && letters[i].toLowerCase().charCodeAt() <= 103) {
+            microchunks.push(getRandomElement(organized_segments[letters[i].toLowerCase()]));
+        }
+        if (letters[i].toLowerCase().charCodeAt() >= 104 && letters[i].toLowerCase().charCodeAt() <= 108) {
+            var the_note;
+            switch(letters[i].toLowerCase()) {
+                case 'h':
+                  the_note = 'bb'
+                  break;
+                case 'i':
+                  the_note = 'eb'
+                  break;
+                case 'j':
+                  the_note = 'f#'
+                  break;
+                case 'k':
+                  the_note = 'c#'
+                  break;
+                case 'l':
+                  the_note = 'ab'
+                  break;
+                default:
+                  break;
+            }
+            microchunks.push(getRandomElement(organized_segments[the_note]));
         }
         
     }
@@ -68,11 +114,29 @@ $(document).ready(function(){
     player = remixer.getPlayer();
     info("Loading analysis data...");
 
+    // Set up our arrays here...
+    for (var i = 0; i < 12; i++ ) {
+        organized_segments[intsToNotes(i)] = [];
+    }
+
     remixer.remixTrackById(trackID, trackURL, function(t, percent) {
             track = t;
 
             info(percent + "% of the track loaded...");
             if (track.status == 'ok') {
+
+                // Organize each segment by max chroma
+                for (var i = 0; i < track.analysis.segments.length; i++ ) {
+                    var chromaFloats = [];
+                    for (var j = 0; j < track.analysis.segments[i].pitches.length; j++) {
+                        chromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]))
+
+                    }
+                    var maxVal = getMax(chromaFloats);
+                    var note = intsToNotes(chromaFloats.indexOf(maxVal))
+                    organized_segments[note].push(track.analysis.segments[i]);
+                 }
+
                 info('Ready!');
             }
 
