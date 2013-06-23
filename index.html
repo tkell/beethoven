@@ -17,34 +17,47 @@ function trim (str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
 
+
+var startingText = "...what do you think of the Seventh Symphony?";
+var easterEggs = ['roll over']
+
+
+function parseInput(theString) {
+    letters = theString;
+    words = theString.split(' ');
+
+    console.log(letters);
+    console.log(words);
+
+
+}
+
 $(document).ready(function(){
+    $("#textarea-input").val(startingText);
 
-    $("#textarea-input").keypress(function(e) {
+    $("#textarea-input").keyup(function(e) {
         if(e.which == 13) {
-            var the_string = $("#textarea-input").val();
-            the_string = trim(the_string);
+            var theString = $("#textarea-input").val();
+            theString = trim(theString);
 
-            var current_text = $('#text-log').html();
-
-            console.log(current_text);
-            var text_array = current_text.split('<br>');
-            console.log(text_array.length);
-            if (text_array.length > 10) {
-                 text_array.shift();   
+            var currentText = $('#text-log').html();
+            var textArray = currentText.split('<br>');
+            if (textArray.length > 10) {
+                 textArray.shift();   
             }
 
-            current_text = ''
-            for (var i = 0; i < text_array.length; i++) {
-                current_text = current_text + text_array[i] + '<br>';
+            currentText = ''
+            for (var i = 0; i < textArray.length; i++) {
+                currentText = currentText + textArray[i] + '<br>';
             }
 
-            var new_html = current_text + the_string
-            $('#text-log').html(new_html);
+            var newHtml = currentText + theString
+            $('#text-log').html(newHtml);
+            $("#textarea-input").val("");
 
-            $("#textarea-input").val('');
+            parseInput(theString);
         }
     });
-
 });
 
 </script>
@@ -63,7 +76,6 @@ $(document).ready(function(){
 
 <div id="text-input">
     <textarea id="textarea-input" rows="7" cols="60">
-...what do you think of the Seventh Symphony?
     </textarea>
 </div>
 
