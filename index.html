@@ -18,6 +18,12 @@ function trim (str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
 
+function info(str) {
+    $("#info").text(str);
+}
+
+
+
 // the md5 is 1ce90444c07f989f2b2b09d97cc87d43 for the record
 var apiKey = 'WOUHTN44BMS5SMPF2';
 var trackID = 'TRKXYVL13F72A49B87';
@@ -33,13 +39,24 @@ var easterEggs = ['roll over']
 
 
 function parseInput(theString) {
-    letters = theString;
+    letters = theString.split('');
     words = theString.split(' ');
 
     console.log(letters);
     console.log(words);
 
+    var microchunks = Array();
+    for (var i = 0; i < letters.length; i++ ) {
+        if (letters[i] == "a") {
+            console.log("yep");
+            microchunks.push(track.analysis.beats[15]);
+        }
+        
+    }
+    console.log("playing...");
+    console.log(microchunks);
 
+    player.play(0, microchunks);
 }
 
 $(document).ready(function(){
@@ -49,19 +66,14 @@ $(document).ready(function(){
     var context = new webkitAudioContext();
     remixer = createJRemixer(context, $, apiKey);
     player = remixer.getPlayer();
-    console.log("Loading analysis data...");
+    info("Loading analysis data...");
 
     remixer.remixTrackById(trackID, trackURL, function(t, percent) {
             track = t;
 
-            if (percent == 100) {
-                console.log('Loaded entire track...')
-            }
-
+            info(percent + "% of the track loaded...");
             if (track.status == 'ok') {
-                console.log('got it');
-                // test playback.  We'll do more here soon
-                player.play(0, track.analysis.beats[17]);
+                info('Ready!');
             }
 
         });
@@ -122,9 +134,6 @@ $(document).ready(function(){
 
 <div id="info">
 </div>
-
-<button onClick="player.play(0, track.analysis.beats);">Play!</button>
-
 
 </body>
 
