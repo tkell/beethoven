@@ -9,6 +9,7 @@
 
 <body>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src='remix.js'></script>
 
 <script type="text/javascript">
 
@@ -16,6 +17,15 @@
 function trim (str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
+
+// the md5 is 1ce90444c07f989f2b2b09d97cc87d43 for the record
+var apiKey = 'WOUHTN44BMS5SMPF2';
+var trackID = 'TRKXYVL13F72A49B87';
+var trackURL = 'audio/beethoven_7_I.mp3'
+
+var remixer;
+var player;
+var track;
 
 
 var startingText = "...what do you think of the Seventh Symphony?";
@@ -35,6 +45,29 @@ function parseInput(theString) {
 $(document).ready(function(){
     $("#textarea-input").val(startingText);
 
+    // load things into remix
+    var context = new webkitAudioContext();
+    remixer = createJRemixer(context, $, apiKey);
+    player = remixer.getPlayer();
+    console.log("Loading analysis data...");
+
+    remixer.remixTrackById(trackID, trackURL, function(t, percent) {
+            track = t;
+
+            if (percent == 100) {
+                console.log('Loaded entire track...')
+            }
+
+            if (track.status == 'ok') {
+                console.log('got it');
+                // test playback.  We'll do more here soon
+                player.play(0, track.analysis.beats[17]);
+            }
+
+        });
+
+
+    // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
         if(e.which == 13) {
             var theString = $("#textarea-input").val();
@@ -85,9 +118,12 @@ $(document).ready(function(){
 <div id="about">
 <p> What We Talk About When We Talk About Beethoven is a piece for human and human, or human and chatbot.</p>
 <p> WWTAWWTAB works best in Chrome.</p>
-
 </div>
 
+<div id="info">
+</div>
+
+<button onClick="player.play(0, track.analysis.beats);">Play!</button>
 
 
 </body>
