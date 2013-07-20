@@ -42,9 +42,6 @@ function info(str) {
 }
 
 
-
-
-
 // the md5 is 1ce90444c07f989f2b2b09d97cc87d43 for the record
 var apiKey = 'WOUHTN44BMS5SMPF2';
 var trackID = 'TRKXYVL13F72A49B87';
@@ -54,25 +51,19 @@ var remixer;
 var player;
 var track;
 
-var organized_segments = {};
-
-
+var organizedSegments = {};
 var startingText = "...what do you think of the Seventh Symphony?";
-var easterEggs = ['roll over']
+var easterEggs = ['roll over']; // not done yet.
 
 
-function parseInput(theString) {
-    letters = theString.split('');
-    words = theString.split(' ');
 
-    console.log(letters);
-    console.log(words);
 
+function parseMicroChunks(letters) {
     var microchunks = Array();
     for (var i = 0; i < letters.length; i++ ) {
         // Deal with A-G
         if (letters[i].toLowerCase().charCodeAt() >= 97 && letters[i].toLowerCase().charCodeAt() <= 103) {
-            microchunks.push(getRandomElement(organized_segments[letters[i].toLowerCase()]));
+            microchunks.push(getRandomElement(organizedSegments[letters[i].toLowerCase()]));
         }
         if (letters[i].toLowerCase().charCodeAt() >= 104 && letters[i].toLowerCase().charCodeAt() <= 108) {
             var the_note;
@@ -95,14 +86,64 @@ function parseInput(theString) {
                 default:
                   break;
             }
-            microchunks.push(getRandomElement(organized_segments[the_note]));
+            microchunks.push(getRandomElement(organizedSegments[the_note]));
         }
         
     }
-    console.log("playing...");
-    console.log(microchunks);
-
     player.play(0, microchunks);
+}
+
+function parseScaleDegrees(words) {
+    numChunks = 16;
+    var scaleDegreeChunks = [];
+    for (var i = 0; i < words.length; i++ ) {
+            var the_note;
+            switch(words[i].toLowerCase()) {
+                case 'tonic':
+                  the_note = 'a'
+                  break;
+                case 'supertonic':
+                  the_note = 'b'
+                  break;
+                case 'mediant':
+                  the_note = 'c#'
+                  break;
+                case 'subdominant':
+                  the_note = 'd'
+                  break;
+                case 'dominant':
+                  the_note = 'e'
+                  break;
+                case 'submediant':
+                  the_note = 'f#'
+                  break;
+                case 'subtonic':
+                  the_note = 'g'
+                  break;
+                case 'leading tone':
+                  the_note = 'ab'
+                  break;
+                default:
+                  break;
+            }
+        for (var j = 0; j < numChunks; j++) {
+            scaleDegreeChunks.push(getRandomElement(organizedSegments[the_note]));
+        }
+        player.play(0, scaleDegreeChunks);
+    }
+}
+
+function parseInput(theString) {
+    letters = theString.split('');
+    words = theString.split(' ');
+
+    //console.log(letters);
+    //console.log(words);
+
+    parseMicroChunks(letters);
+    parseScaleDegrees(words);
+
+
 }
 
 $(document).ready(function(){
@@ -116,7 +157,7 @@ $(document).ready(function(){
 
     // Set up our arrays here...
     for (var i = 0; i < 12; i++ ) {
-        organized_segments[intsToNotes(i)] = [];
+        organizedSegments[intsToNotes(i)] = [];
     }
 
     remixer.remixTrackById(trackID, trackURL, function(t, percent) {
@@ -134,7 +175,7 @@ $(document).ready(function(){
                     }
                     var maxVal = getMax(chromaFloats);
                     var note = intsToNotes(chromaFloats.indexOf(maxVal))
-                    organized_segments[note].push(track.analysis.segments[i]);
+                    organizedSegments[note].push(track.analysis.segments[i]);
                  }
 
                 info('Ready!');
