@@ -64,7 +64,7 @@ function parseMicroChunks(letters) {
             microchunks.push(getRandomElement(organizedSegments[letters[i].toLowerCase()]));
         }
         if (letters[i].toLowerCase().charCodeAt() >= 104 && letters[i].toLowerCase().charCodeAt() <= 108) {
-            var the_note = '';
+            var the_note;
             switch(letters[i].toLowerCase()) {
                 case 'h':
                   the_note = 'bb'
@@ -82,6 +82,7 @@ function parseMicroChunks(letters) {
                   the_note = 'ab'
                   break;
                 default:
+                  the_note = '';
                   break;
             }
             if (the_note != '') {
@@ -97,7 +98,7 @@ function parseScaleDegrees(words) {
     numChunks = 16;
     var scaleDegreeChunks = [];
     for (var i = 0; i < words.length; i++ ) {
-            var the_note = '';
+            var the_note;
             switch(words[i].toLowerCase()) {
                 case 'tonic':
                   the_note = 'a'
@@ -124,6 +125,7 @@ function parseScaleDegrees(words) {
                   the_note = 'ab'
                   break;
                 default:
+                  the_note = '';
                   break;
             }
         if (the_note != '') {
@@ -163,6 +165,7 @@ function parseScaleNumerals(words) {
                   the_note = 'ab'
                   break;
                 default:
+                  the_note = '';
                   break;
             }
         if (the_note != '') {
@@ -177,9 +180,6 @@ function parseScaleNumerals(words) {
 function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
-
-    console.log(letters);
-    console.log(words);
 
     parseMicroChunks(letters);
     parseScaleDegrees(words);
