@@ -50,6 +50,7 @@ var player;
 var track;
 
 var organizedSegments = {};
+var organizedSegmentsChords = {};
 var startingText = "...what do you think of the Seventh Symphony?";
 var easterEggs = ['roll over']; // not done yet.
 
@@ -184,8 +185,6 @@ function parseInput(theString) {
     parseMicroChunks(letters);
     parseScaleDegrees(words);
     parseScaleNumerals(words);
-
-
 }
 
 $(document).ready(function(){
@@ -200,30 +199,48 @@ $(document).ready(function(){
     // Set up our arrays here...
     for (var i = 0; i < 12; i++ ) {
         organizedSegments[intsToNotes(i)] = [];
+        organizedSegmentsChords[intsToNotes(i)] = [];
     }
 
     remixer.remixTrackById(trackID, trackURL, function(t, percent) {
-            track = t;
+        track = t;
 
-            info(percent + "% of the track loaded...");
-            if (track.status == 'ok') {
-                // Organize each segment by max chroma
-                for (var i = 0; i < track.analysis.segments.length; i++ ) {
-                    var chromaFloats = [];
-                    for (var j = 0; j < track.analysis.segments[i].pitches.length; j++) {
-                        chromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]))
-
-                    }
-                    var maxVal = getMax(chromaFloats);
-                    var note = intsToNotes(chromaFloats.indexOf(maxVal))
-                    organizedSegments[note].push(track.analysis.segments[i]);
-                 }
-
-                info('Ready!');
+        info(percent + "% of the track loaded...");
+        if (track.status == 'ok') {
+            // Organize each segment by max chroma
+            var chromaFloats = [];
+            for (var i = 0; i < track.analysis.segments.length; i++ ) {
+                chromaFloats = []
+                for (var j = 0; j < track.analysis.segments[i].pitches.length; j++) {
+                    chromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]))
+                }
+                var maxVal = getMax(chromaFloats);
+                var note = intsToNotes(chromaFloats.indexOf(maxVal))
+                organizedSegments[note].push(track.analysis.segments[i]);
             }
 
-        });
-
+            // Organize each segment by chord;  if a chord's 3 notes hit the top 3
+            // of the chroma, we take it.  We'll just do major for now
+            for (var i = 0; i < track.analysis.segments.length; i++ ) {
+                var sortedChromaFloats = [];
+                chromaFloats = [];
+                for (var j = 0; j < track.analysis.segments[i].pitches.length; j++) {
+                    chromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]));
+                    sortedChromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]));
+                }
+                var sortedChromaFloats = sortedChromaFloats.sort(function(a,b){return b-a});
+                // what chord am I?
+                for (var j = 0; j < 12; j++) {
+                    if (sortedChromaFloats.indexOf(chromaFloats[j]) < 3 &&
+                        sortedChromaFloats.indexOf(chromaFloats[(j + 4) % 12]) < 3 &&
+                        sortedChromaFloats.indexOf(chromaFloats[(j + 7) % 12]) < 3) {
+                        organizedSegmentsChords[intsToNotes(j)].push(track.analysis.segments[i]);
+                    }
+                }
+            }
+        }
+        info('Ready!');
+    });
 
     // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
