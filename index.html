@@ -12,9 +12,7 @@
 <script type="text/javascript" src='remix.js'></script>
 
 <script type="text/javascript">
-
-
-
+// Helpers
 function trim(str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
@@ -24,7 +22,7 @@ function getMax(theArray) {
 }
 
 function getRandomElement(theArray) {
-    return theArray[Math.floor(Math.random()*theArray.length)];
+    return theArray[Math.floor(Math.random() * theArray.length)];
 }
 
 function intsToNotes(the_int){
@@ -57,7 +55,7 @@ var easterEggs = ['roll over']; // not done yet.
 
 
 
-
+// Parsers
 function parseMicroChunks(letters) {
     var microchunks = Array();
     for (var i = 0; i < letters.length; i++ ) {
@@ -66,7 +64,7 @@ function parseMicroChunks(letters) {
             microchunks.push(getRandomElement(organizedSegments[letters[i].toLowerCase()]));
         }
         if (letters[i].toLowerCase().charCodeAt() >= 104 && letters[i].toLowerCase().charCodeAt() <= 108) {
-            var the_note;
+            var the_note = '';
             switch(letters[i].toLowerCase()) {
                 case 'h':
                   the_note = 'bb'
@@ -86,7 +84,9 @@ function parseMicroChunks(letters) {
                 default:
                   break;
             }
-            microchunks.push(getRandomElement(organizedSegments[the_note]));
+            if (the_note != '') {
+                microchunks.push(getRandomElement(organizedSegments[the_note]));
+            }
         }
         
     }
@@ -97,7 +97,7 @@ function parseScaleDegrees(words) {
     numChunks = 16;
     var scaleDegreeChunks = [];
     for (var i = 0; i < words.length; i++ ) {
-            var the_note;
+            var the_note = '';
             switch(words[i].toLowerCase()) {
                 case 'tonic':
                   the_note = 'a'
@@ -126,10 +126,51 @@ function parseScaleDegrees(words) {
                 default:
                   break;
             }
-        for (var j = 0; j < numChunks; j++) {
-            scaleDegreeChunks.push(getRandomElement(organizedSegments[the_note]));
+        if (the_note != '') {
+            for (var j = 0; j < numChunks; j++) {
+                scaleDegreeChunks.push(getRandomElement(organizedSegments[the_note]));
+            }
         }
         player.play(0, scaleDegreeChunks);
+    }
+}
+
+function parseScaleNumerals(words) {
+    numChunks = 8;
+    var scaleNumeralChunks = [];
+    for (var i = 0; i < words.length; i++ ) {
+            var the_note;
+            switch(words[i].toLowerCase()) {
+                case 'i':
+                  the_note = 'a'
+                  break;
+                case 'ii':
+                  the_note = 'b'
+                  break;
+                case 'iii':
+                  the_note = 'c#'
+                  break;
+                case 'iv':
+                  the_note = 'd'
+                  break;
+                case 'v':
+                  the_note = 'e'
+                  break;
+                case 'vi':
+                  the_note = 'f#'
+                  break;
+                case 'vii':
+                  the_note = 'ab'
+                  break;
+                default:
+                  break;
+            }
+        if (the_note != '') {
+            for (var j = 0; j < numChunks; j++) {
+                scaleNumeralChunks.push(getRandomElement(organizedSegments[the_note]));
+            }
+        }
+        player.play(0, scaleNumeralChunks);
     }
 }
 
@@ -137,11 +178,12 @@ function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
 
-    //console.log(letters);
-    //console.log(words);
+    console.log(letters);
+    console.log(words);
 
     parseMicroChunks(letters);
     parseScaleDegrees(words);
+    parseScaleNumerals(words);
 
 
 }
@@ -165,7 +207,6 @@ $(document).ready(function(){
 
             info(percent + "% of the track loaded...");
             if (track.status == 'ok') {
-
                 // Organize each segment by max chroma
                 for (var i = 0; i < track.analysis.segments.length; i++ ) {
                     var chromaFloats = [];
