@@ -51,6 +51,7 @@ var track;
 
 var organizedSegments = {};
 var organizedSegmentsChords = {};
+var beatsByForm = {'introduction': [], 'exposition': [], 'development': [], 'recap': [], 'coda': []};
 var startingText = "...what do you think of the Seventh Symphony?";
 var easterEggs = ['roll over']; // not done yet.
 
@@ -178,6 +179,18 @@ function parseScaleNumerals(words) {
     }
 }
 
+function parseForm(words) {
+  var formWord = ['introduction', 'exposition', 'development', 'recap', 'coda'];
+  // play some set of 8 ordered beats from within them
+  numChunks = 12;
+  for (var i = 0; i < words.length; i++ ) {
+      if (formWord.indexOf(words[i]) != -1)  {
+          var startIndex = Math.floor(Math.random() * (beatsByForm[words[i]].length - numChunks));
+          player.play(0, beatsByForm[words[i]].slice(startIndex, startIndex + numChunks));
+      }
+  }
+}
+
 function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
@@ -185,6 +198,7 @@ function parseInput(theString) {
     parseMicroChunks(letters);
     parseScaleDegrees(words);
     parseScaleNumerals(words);
+    parseForm(words);
 }
 
 $(document).ready(function(){
@@ -238,8 +252,30 @@ $(document).ready(function(){
                     }
                 }
             }
+
+            // Organize each beat by section of the form.
+            var introduction = [0, 240];
+            var exposition = [241, 512];
+            var development = [513, 634];
+            var recap = [635, 773];
+            var coda = [774, 855];
+
+            for (var i = 0; i < track.analysis.beats.length; i++ ) {
+                if (track.analysis.beats[i].start < introduction[1]) {
+                    beatsByForm['introduction'].push(track.analysis.beats[i])
+                } else if (track.analysis.beats[i].start < exposition[1]) {
+                    beatsByForm['exposition'].push(track.analysis.beats[i])
+                } else if (track.analysis.beats[i].start < development[1]) {
+                    beatsByForm['development'].push(track.analysis.beats[i])
+                } else if (track.analysis.beats[i].start < recap[1]) {
+                    beatsByForm['recap'].push(track.analysis.beats[i])
+                } else if (track.analysis.beats[i].start < coda[1]) {
+                    beatsByForm['coda'].push(track.analysis.beats[i])
+                }
+            }
+            info('Ready!');
         }
-        info('Ready!');
+        
     });
 
     // Take user input, update the UI, and parse the input
