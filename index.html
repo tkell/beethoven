@@ -47,6 +47,7 @@ var trackURL = 'audio/beethoven_7_I.mp3'
 
 var remixer;
 var player;
+var filteredPlayer;
 var track;
 
 var organizedSegments = {};
@@ -93,7 +94,7 @@ function parseMicroChunks(letters) {
         }
         
     }
-    player.play(0, microchunks);
+    player.play(0, microchunks, [filter]);
 }
 
 function parseScaleDegrees(words) {
@@ -195,7 +196,7 @@ function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
 
-    parseMicroChunks(letters);
+    // parseMicroChunks(letters);
     parseScaleDegrees(words);
     parseScaleNumerals(words);
     parseForm(words);
@@ -207,8 +208,17 @@ $(document).ready(function(){
     // load things into remix
     var context = new webkitAudioContext();
     remixer = createJRemixer(context, $, apiKey);
+
+    var filter = context.createBiquadFilter();
+    filter.type = 0; // Low-pass filter. See BiquadFilterNode docs
+    filter.frequency.value = 1760; // Set cutoff to 440 HZ
+
     player = remixer.getPlayer();
+    filteredPlayer = remixer.getPlayer([filter]);
     info("Loading analysis data...");
+
+    // Create the filter
+    
 
     // Set up our arrays here...
     for (var i = 0; i < 12; i++ ) {
@@ -280,7 +290,7 @@ $(document).ready(function(){
 
     // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
-        if(e.which == 13) {
+        if (e.which == 13) {
             var theString = $("#textarea-input").val();
             theString = trim(theString);
 
@@ -301,8 +311,32 @@ $(document).ready(function(){
 
             parseInput(theString);
         }
+      else if (e.which >= 65 && e.which  <= 76) {
+          var theNote = String.fromCharCode(e.which).toLowerCase();
+          switch(theNote) {
+                  case 'h':
+                    theNote = 'bb'
+                    break;
+                  case 'i':
+                    theNote = 'eb'
+                    break;
+                  case 'j':
+                    theNote = 'f#'
+                    break;
+                  case 'k':
+                    theNote = 'c#'
+                    break;
+                  case 'l':
+                    theNote = 'ab'
+                    break;
+                  default:
+                    theNote = theNote;
+                    break;
+              }
+          filteredPlayer.play(0, getRandomElement(organizedSegments[theNote]));
+        }
     });
-});
+}); // end init
 
 </script>
 

@@ -216,7 +216,7 @@ function createJRemixer(context, jquery, apiKey) {
             }
         },
 
-        getPlayer : function() {
+        getPlayer : function(effects) {
             var queueTime = 0;
             var audioGain = context.createGainNode();
             var curAudioSource = null;
@@ -226,7 +226,15 @@ function createJRemixer(context, jquery, apiKey) {
             var afterPlayCallback = null;
             var currentTriggers = new Array();
             audioGain.gain.value = 1;
-            audioGain.connect(context.destination);
+
+            // aha.  Put them here, after the gain knob
+            // OR, put them into each player call?  That seems lousy
+            effects = effects || [];
+            effects.unshift(audioGain);
+            for (var i = 0; i < effects.length -1; i++) {
+                effects[i].connect(effects[i + 1]);
+            }
+            effects[i].connect(context.destination);
 
             function queuePlay(when, q) {
                 audioGain.gain.value = 1;
@@ -295,7 +303,7 @@ function createJRemixer(context, jquery, apiKey) {
             }
 
             var player = {
-                play: function(when, q) {
+                play: function(when, q, effects) {
                     return queuePlay(0, q);
                 },
 
