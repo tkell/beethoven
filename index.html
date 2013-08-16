@@ -45,6 +45,9 @@ var apiKey = 'WOUHTN44BMS5SMPF2';
 var trackID = 'TRKXYVL13F72A49B87';
 var trackURL = 'audio/beethoven_7_I.mp3'
 
+var convolutionURLs = ['audio/convolve-delay_I.mp3']
+
+
 var remixer;
 var player;
 var filteredPlayer;
@@ -197,9 +200,9 @@ function parseInput(theString) {
     words = theString.split(' ');
 
     // parseMicroChunks(letters);
-    parseScaleDegrees(words);
-    parseScaleNumerals(words);
-    parseForm(words);
+    //parseScaleDegrees(words);
+    //parseScaleNumerals(words);
+    //parseForm(words);
 }
 
 $(document).ready(function(){
@@ -209,15 +212,32 @@ $(document).ready(function(){
     var context = new webkitAudioContext();
     remixer = createJRemixer(context, $, apiKey);
 
+    // Create the filter
     var filter = context.createBiquadFilter();
-    filter.type = 0; // Low-pass filter. See BiquadFilterNode docs
-    filter.frequency.value = 1760; // Set cutoff to 440 HZ
+    filter.type = 0; // Low-pass filter. 
+    filter.frequency.value = 1760; 
 
+    // Load the convolver - might still keep this, but with a much smaller chunk of time
+    var convolver = context.createConvolver();
+    var request = new XMLHttpRequest();
+    request.open("GET", convolutionURLs[0], true);
+    request.responseType = "arraybuffer";
+
+    // Add a gain to keep things backgrounded.
+    var filterGain = context.createGainNode();
+    filterGain.gain.value = 0.25;
+   
+    request.onload = function () {
+      info("Convolver loaded...");
+      convolver.buffer = context.createBuffer(request.response, false);
+    }
+    request.send();
     player = remixer.getPlayer();
-    filteredPlayer = remixer.getPlayer([filter]);
+    filteredPlayer = remixer.getPlayer([convolver, filter, filterGain]);
     info("Loading analysis data...");
 
-    // Create the filter
+    
+
     
 
     // Set up our arrays here...
