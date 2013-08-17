@@ -10,6 +10,7 @@
 <body>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript" src='remix.js'></script>
+<script type="text/javascript" src='buffer-loader.js'></script>
 
 <script type="text/javascript">
 // Helpers
@@ -39,13 +40,13 @@ function info(str) {
     $("#info").text(str);
 }
 
-
 var apiKey = 'WOUHTN44BMS5SMPF2';
 var trackIDs = ['TRKXYVL13F72A49B87', 'TRMAPVN1408A307A04', 'TRBVPWY1408A33440C', 'TRVTOJT1408A35EDFA'];
-var trackURLs = ['audio/beethoven_7_I.mp3', 'audio/beethoven_7_II.mp3', 'audio/beethoven_7_III.mp3', 'audio/beethoven_7_IV.mp3'];
+var trackURLs = ['audio/beethoven_7_I.mp3', 'audio/beethoven_7_II.mp3', 'audio/beethoven_7_III.mp3', 'audio/beethoven_7_IV.mp3']
 
+var convolver;
 var convolutionURLs = ['audio/convolve_I.mp3', 'audio/convolve_II.mp3', 'audio/convolve_III.mp3', 'audio/convolve_IV.mp3'];
-var convolverBuffers = [];
+var convolutionBuffers = [];
 
 
 var remixer;
@@ -103,6 +104,8 @@ function parseInput(theString) {
         }
     }
 
+
+
     // and then things about the form of each movement can go here
 
 
@@ -119,6 +122,9 @@ function parseInput(theString) {
         }
         playback = playback.concat(mappings[currentMovement][word]);
     }
+
+    // Update the convolver
+    convolver.buffer = convolutionBuffers[currentMovement];
 
     // Play things!  in sequence for now...
     player.play(0, playback);
@@ -137,25 +143,23 @@ $(document).ready(function(){
     filter.frequency.value = 1760; 
 
     // Load the convolver
-    // This will also go in the massive FOR loop
-    var convolver = context.createConvolver();
-    for (var i = 0; i < 4 ; i++ ){ }
-        var request = new XMLHttpRequest();
-        request.open("GET", convolutionURLs[0], true);
-        request.responseType = "arraybuffer";
-        request.onload = function () {
-          info("Convolver loaded...");
-          convolverBuffers.push(context.createBuffer(request.response, false));
+    convolver = context.createConvolver();
+    function finishedLoading(bufferList) {
+        for (var convolveIndex = 0; convolveIndex < bufferList.length; convolveIndex++) {
+            convolutionBuffers.push(bufferList[convolveIndex])
         }
-        request.send();
+        convolver.buffer = convolutionBuffers[currentMovement];
     }
 
-    convolver.buffer = convolverBuffers[currentMovement];
+    bufferLoader = new BufferLoader(context, convolutionURLs, finishedLoading);
+    bufferLoader.load();
+
     // Add a gain to keep things backgrounded.
     var filterGain = context.createGainNode();
     filterGain.gain.value = 0.35;
 
     player = remixer.getPlayer();
+
     filteredPlayer = remixer.getPlayer([convolver, filter, filterGain]);
     info("Loading analysis data...");
 
@@ -166,7 +170,7 @@ $(document).ready(function(){
 
     // can I just make a huge FOR here?
 
-    remixer.remixTrackById(trackID, trackURL, function(t, percent) {
+    remixer.remixTrackById(trackIDs[0], trackURLs[0], function(t, percent) {
         track = t;
 
         info(percent + "% of the track loaded...");
