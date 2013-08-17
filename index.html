@@ -40,12 +40,12 @@ function info(str) {
 }
 
 
-// the md5 is 1ce90444c07f989f2b2b09d97cc87d43 for the record
 var apiKey = 'WOUHTN44BMS5SMPF2';
-var trackID = 'TRKXYVL13F72A49B87';
-var trackURL = 'audio/beethoven_7_I.mp3'
+var trackIDs = ['TRKXYVL13F72A49B87', 'TRMAPVN1408A307A04', 'TRBVPWY1408A33440C', 'TRVTOJT1408A35EDFA'];
+var trackURLs = ['audio/beethoven_7_I.mp3', 'audio/beethoven_7_II.mp3', 'audio/beethoven_7_III.mp3', 'audio/beethoven_7_IV.mp3'];
 
-var convolutionURLs = ['audio/convolve-delay_I.mp3']
+var convolutionURLs = ['audio/convolve_I.mp3', 'audio/convolve_II.mp3', 'audio/convolve_III.mp3', 'audio/convolve_IV.mp3'];
+var convolverBuffers = [];
 
 
 var remixer;
@@ -136,17 +136,21 @@ $(document).ready(function(){
     filter.type = 0; // Low-pass filter. 
     filter.frequency.value = 1760; 
 
-    // Load the convolver - might still keep this, but with a much smaller chunk of time
+    // Load the convolver
+    // This will also go in the massive FOR loop
     var convolver = context.createConvolver();
-    var request = new XMLHttpRequest();
-    request.open("GET", convolutionURLs[0], true);
-    request.responseType = "arraybuffer";
-    request.onload = function () {
-      info("Convolver loaded...");
-      convolver.buffer = context.createBuffer(request.response, false);
+    for (var i = 0; i < 4 ; i++ ){ }
+        var request = new XMLHttpRequest();
+        request.open("GET", convolutionURLs[0], true);
+        request.responseType = "arraybuffer";
+        request.onload = function () {
+          info("Convolver loaded...");
+          convolverBuffers.push(context.createBuffer(request.response, false));
+        }
+        request.send();
     }
-    request.send();
 
+    convolver.buffer = convolverBuffers[currentMovement];
     // Add a gain to keep things backgrounded.
     var filterGain = context.createGainNode();
     filterGain.gain.value = 0.35;
@@ -159,6 +163,8 @@ $(document).ready(function(){
     for (var i = 0; i < 12; i++ ) {
         organizedSegments[intsToNotes(i)] = [];
     }
+
+    // can I just make a huge FOR here?
 
     remixer.remixTrackById(trackID, trackURL, function(t, percent) {
         track = t;
