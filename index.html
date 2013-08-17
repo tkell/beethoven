@@ -52,11 +52,11 @@ var convolutionBuffers = [];
 var remixer;
 var player;
 var filteredPlayer;
-var track;
+var tracks = [null, null, null, null];
 
-var organizedSegments = {};
+var organizedSegments = [{}, {}, {}, {}];
 var startingText = "...what do you think of the Seventh Symphony?";
-var easterEggs = ['roll over']; // not done yet.
+var easterEggs = ['roll over']; // not done yet, may never be.
 
 var currentMovement = 0;
 var mappings = [{}, {}, {}, {}];
@@ -103,9 +103,6 @@ function parseInput(theString) {
           currentMovement = currentMovement + 1;
         }
     }
-
-
-
     // and then things about the form of each movement can go here
 
 
@@ -117,7 +114,7 @@ function parseInput(theString) {
           var numberOfBeats = parseInt((word.length / 3) + 1);
           var index = mappingIndexes[currentMovement];
           //replace with tracks[currentMovement].analysis.etc...
-          mappings[currentMovement][word] = track.analysis.beats.slice(index, index + numberOfBeats);
+          mappings[currentMovement][word] = tracks[currentMovement].analysis.beats.slice(index, index + numberOfBeats);
           mappingIndexes[currentMovement] = mappingIndexes[currentMovement] + numberOfBeats;
         }
         playback = playback.concat(mappings[currentMovement][word]);
@@ -163,33 +160,53 @@ $(document).ready(function(){
     filteredPlayer = remixer.getPlayer([convolver, filter, filterGain]);
     info("Loading analysis data...");
 
-    // Set up our arrays here...
-    for (var i = 0; i < 12; i++ ) {
-        organizedSegments[intsToNotes(i)] = [];
+    // Set up our segment arrays, for all movements
+    for (var i = 0; i < organizedSegments.length; i++) {
+        for (var j = 0; j < 12; j++ ) {
+            organizedSegments[i][intsToNotes(j)] = [];
+        }
     }
 
     // can I just make a huge FOR here?
+    // NO.  DOM Error 12 will eat you.  We're going to try to cute this out 
 
-    remixer.remixTrackById(trackIDs[0], trackURLs[0], function(t, percent) {
-        track = t;
-
-        info(percent + "% of the track loaded...");
-        if (track.status == 'ok') {
-            // Organize each segment by max chroma
-            var chromaFloats = [];
-            for (var i = 0; i < track.analysis.segments.length; i++ ) {
-                chromaFloats = []
-                for (var j = 0; j < track.analysis.segments[i].pitches.length; j++) {
-                    chromaFloats.push(parseFloat(track.analysis.segments[i].pitches[j]))
-                }
-                var maxVal = getMax(chromaFloats);
-                var note = intsToNotes(chromaFloats.indexOf(maxVal))
-                organizedSegments[note].push(track.analysis.segments[i]);
-            }
-            info('Ready!');
+    var remixedFlags = [true, false, false, false];
+    var remixIndex = 0;
+    function multipleRemix(tracks, trackIDs, trackURLs) {
+        if (remixedFlags[remixIndex] = false) {
+            // 10 second timer with recursive callback
+            console.log('waiting on ' + remixIndex);
+            setTimeout(multipleRemix(tracks, trackIDs, trackURLs), 10000);
         }
-        
-    });
+        else {
+            // do a remix!
+            remixer.remixTrackById(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
+                tracks[remixIndex] = t;
+
+                info(percent + "% of the track loaded...");
+                if (tracks[remixIndex].status == 'ok') {
+                    // Organize each segment by max chroma
+                    var chromaFloats = [];
+                    for (var i = 0; i < tracks[remixIndex].analysis.segments.length; i++ ) {
+                        chromaFloats = []
+                        for (var j = 0; j < tracks[remixIndex].analysis.segments[i].pitches.length; j++) {
+                            chromaFloats.push(parseFloat(tracks[remixIndex].analysis.segments[i].pitches[j]))
+                        }
+                        var maxVal = getMax(chromaFloats);
+                        var note = intsToNotes(chromaFloats.indexOf(maxVal))
+                        organizedSegments[remixIndex][note].push(tracks[remixIndex].analysis.segments[i]);
+                    }
+                    info('Ready!');
+                    remixIndex = remixIndex + 1;
+                    remixedFlags[remixIndex] = true;
+                    multipleRemix(tracks, trackIDs, trackURLs);
+                }
+            });
+        }
+    }
+
+    multipleRemix(tracks, trackIDs, trackURLs);
+
 
     // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
@@ -236,7 +253,7 @@ $(document).ready(function(){
                     theNote = theNote;
                     break;
               }
-          filteredPlayer.play(0, getRandomElement(organizedSegments[theNote]));
+          filteredPlayer.play(0, getRandomElement(organizedSegments[currentMovement][theNote]));
         }
     });
 }); // end init
