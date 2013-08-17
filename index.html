@@ -71,9 +71,40 @@ var mappingIndexes = [0, 0, 0, 0];
 function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
-    words = theString.split(' ');
 
-    // We'll parse movement & form jumps here, eventually
+    // we many want to strip punctuation here too
+    for (var i = 0; i < words.length; i++) {
+        words[i] = words[i].toLowerCase();
+    }
+     // Move the 'play head' based on the word before or after 'movement'
+    if (words.indexOf('movement') != -1) {
+        var before = '';
+        var after = '';
+        if (words.indexOf('movement') > 0) {before = words[words.indexOf('movement') - 1];}
+        if (words.indexOf('movement') < words.length - 1) {after = words[words.indexOf('movement') + 1]};
+
+        if (before == 'first' || before == '1st' || after == 'i' || after == '1' || after == 'one') {
+          currentMovement = 0;
+        }
+        else if (before == 'second' || before == '2nd' || after == 'ii' || after == '2' || after == 'two') {
+          currentMovement = 1;
+        }
+        else if (before == 'third' || before == '3rd' || after == 'iii' || after == '3' || after == 'three') {
+          currentMovement = 2;
+        }
+        else if (before == 'fourth' || before == 'last' ||before == '4th' || after == 'iv' || after == '4' || after == 'four') {
+          currentMovement = 3;
+        }
+        else if (before == 'previous' && currentMovement != 0) {
+          currentMovement = currentMovement - 1;
+        }
+        else if (before == 'next' && currentMovement != 3) {
+          currentMovement = currentMovement + 1;
+        }
+    }
+
+    // and then things about the form of each movement can go here
+
 
     // Assign any new words
     var playback = [];
@@ -82,6 +113,7 @@ function parseInput(theString) {
       if (mappings[currentMovement].hasOwnProperty(word) == false) {
           var numberOfBeats = parseInt((word.length / 3) + 1);
           var index = mappingIndexes[currentMovement];
+          //replace with tracks[currentMovement].analysis.etc...
           mappings[currentMovement][word] = track.analysis.beats.slice(index, index + numberOfBeats);
           mappingIndexes[currentMovement] = mappingIndexes[currentMovement] + numberOfBeats;
         }
