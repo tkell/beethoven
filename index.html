@@ -36,8 +36,8 @@ function notesToInts(the_note) {
 }
 
 function beatIndexFromTime(track, time) {
-    for (var i = 0; i < track.analysis.segments.length; i++) {
-        if (track.analysis.segments[i].start >= time) {
+    for (var i = 0; i < track.analysis.beats.length; i++) {
+        if (track.analysis.beats[i].start >= time) {
             return i;
         }
     }
@@ -124,10 +124,10 @@ function parseInput(theString) {
     var playback = [];
     for (var i = 0; i < words.length; i++) {
         var word = words[i].toLowerCase();
-      if (mappings[currentMovement].hasOwnProperty(word) == false) {
-          var numberOfSegs = parseInt((word.length / 3) + 1) * 3;
+      if (mappings.hasOwnProperty(word) == false) {
+          var numberOfBeats = parseInt((word.length / 3) + 1);
           var index = mappingIndexes[currentMovement];
-          mappings[word] = tracks[currentMovement].analysis.segments.slice(index, index + numberOfSegs);
+          mappings[word] = tracks[currentMovement].analysis.beats.slice(index, index + numberOfBeats);
           mappingIndexes[currentMovement] = mappingIndexes[currentMovement] + numberOfBeats;
         }
         playback = playback.concat(mappings[word]);
