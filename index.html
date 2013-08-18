@@ -35,6 +35,15 @@ function notesToInts(the_note) {
     return {'c': '0', 'c#': '1', 'd': '2', 'eb': '3', 'e': '4', 'f': '5', 'f#': '6', 'g': '7', 'ab': '8', 'a': '9', 'bb': '10', 'b': '11',}[the_note]
 }
 
+function beatIndexFromTime(track, time){
+    for (var i = 0; i < track.analysis.beats.length; i++) {
+        if (track.analysis.beats[i].startTime >= time) {
+            return i;
+        }
+    }
+
+}
+
 
 function info(str) {
     $("#info").text(str);
@@ -163,22 +172,21 @@ $(document).ready(function(){
     }
 
     // Set up the form charts
-
     // First movement form
     formWords[0] = {
-        'introduction' = 0;
-        'exposition' = 241;
-        'development' = 513;
-        'recap' = 635;
-        'coda' = 774;
+        'introduction': beatIndexFromTime(tracks[0], 0),
+        'exposition': beatIndexFromTime(tracks[0], 241),
+        'development': beatIndexFromTime(tracks[0], 513),
+        'recap': beatIndexFromTime(tracks[0], 635),
+        'coda': beatIndexFromTime(tracks[0], 774),
     }
 
     // Fourth movement form
     formWords[3] = {
-        'exposition' = 0;
-        'development' = 114;
-        'recap' = 204;
-        'coda' = 322;
+        'exposition': beatIndexFromTime(tracks[0], 0),
+        'development': beatIndexFromTime(tracks[0], 114),
+        'recap': beatIndexFromTime(tracks[0], 204),
+        'coda': beatIndexFromTime(tracks[0], 322),
     }     
 
 
