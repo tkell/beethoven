@@ -247,7 +247,7 @@ $(document).ready(function(){
                     var note = intsToNotes(chromaFloats.indexOf(maxVal))
                     organizedSegments[remixIndex][note].push(tracks[remixIndex].analysis.segments[i]);
                 }
-                info('Ready!');
+                
 
                 // Get beat indexes for the form chart
                 for (section in formWords[remixIndex]) {
@@ -255,7 +255,14 @@ $(document).ready(function(){
                 }
 
                 remixIndex = remixIndex + 1;
-                multipleRemix(tracks, trackIDs, trackURLs);
+                if (remixIndex < tracks.length) {
+                    info('Loaded track ' + (remixIndex + 1));
+                    multipleRemix(tracks, trackIDs, trackURLs);
+                }
+                else                 {
+                    $('#textarea-input').prop('disabled', false)
+                    info('All tracks loaded and remixed - ready');
+                }               
             }
         });
     }
@@ -322,12 +329,14 @@ $(document).ready(function(){
     <img src="splash.jpg">
 </div>
 
+<div id="info">
+</div>
 
 <div id="text-log">
 </div>
 
 <div id="text-input">
-    <textarea id="textarea-input" rows="7" cols="60">
+    <textarea id="textarea-input" rows="7" cols="60" disabled>
     </textarea>
 </div>
 
@@ -338,10 +347,6 @@ $(document).ready(function(){
 <p> What We Talk About When We Talk About Beethoven is a piece for human and human, or human and chatbot.</p>
 <p> WWTAWWTAB works best in Chrome.</p>
 </div>
-
-<div id="info">
-</div>
-
 </body>
 
 </html>
