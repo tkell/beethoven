@@ -61,13 +61,8 @@ var easterEggs = ['roll over']; // not done yet, may never be.
 var currentMovement = 0;
 var mappings = [{}, {}, {}, {}];
 var mappingIndexes = [0, 0, 0, 0];
+var formWords = [{}, {}, {}, {}];
 
-// First movement form
-// var introduction = 0, 240];
-// var exposition = [241, 512];
-// var development = [513, 634];
-// var recap = [635, 773];
-// var coda = [774, 855];
 
 function parseInput(theString) {
     letters = theString.split('');
@@ -167,9 +162,27 @@ $(document).ready(function(){
         }
     }
 
-    // can I just make a huge FOR here?
-    // NO.  DOM Error 12 will eat you.  We're going to try to cute this out 
+    // Set up the form charts
 
+    // First movement form
+    formWords[0] = {
+        'introduction' = 0;
+        'exposition' = 241;
+        'development' = 513;
+        'recap' = 635;
+        'coda' = 774;
+    }
+
+    // Fourth movement form
+    formWords[3] = {
+        'exposition' = 0;
+        'development' = 114;
+        'recap' = 204;
+        'coda' = 322;
+    }     
+
+
+    // Load the various files
     var remixedFlags = [true, false, false, false];
     var remixIndex = 0;
     function multipleRemix(tracks, trackIDs, trackURLs) {
