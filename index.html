@@ -35,13 +35,12 @@ function notesToInts(the_note) {
     return {'c': '0', 'c#': '1', 'd': '2', 'eb': '3', 'e': '4', 'f': '5', 'f#': '6', 'g': '7', 'ab': '8', 'a': '9', 'bb': '10', 'b': '11',}[the_note]
 }
 
-function beatIndexFromTime(track, time){
+function beatIndexFromTime(track, time) {
     for (var i = 0; i < track.analysis.beats.length; i++) {
-        if (track.analysis.beats[i].startTime >= time) {
+        if (track.analysis.beats[i].start >= time) {
             return i;
         }
     }
-
 }
 
 
@@ -77,7 +76,7 @@ function parseInput(theString) {
     letters = theString.split('');
     words = theString.split(' ');
 
-    // we many want to strip punctuation here too
+    // we will want to strip punctuation here too
     for (var i = 0; i < words.length; i++) {
         words[i] = words[i].toLowerCase();
     }
@@ -111,7 +110,7 @@ function parseInput(theString) {
     // I will have to make this more complex:  basicaly I'll need to track the previous locations
     // within each section. 
 
-    formKeys = formWords[currentMovement].keys();
+    formKeys = Object.keys(formWords[currentMovement]);
     for (var i = 0; i < formKeys.length; i++) {
         if (words.indexOf(formKeys[i]) != -1) {
              mappingIndexes[currentMovement] = formWords[currentMovement][formKeys[i]];
@@ -136,7 +135,8 @@ function parseInput(theString) {
     // Update the convolver
     convolver.buffer = convolutionBuffers[currentMovement];
 
-    // Play things!  in sequence for now...
+    // Play things!  in sequence for now.
+    // What to do about those clicks?  maybe move it all to segments?
     player.play(0, playback);
 }
 
@@ -180,63 +180,66 @@ $(document).ready(function(){
         }
     }
 
-    // Set up the form charts
-    // First movement form
+
+    // Create our form lists
     formWords[0] = {
-        'introduction': beatIndexFromTime(tracks[0], 0),
-        'exposition': beatIndexFromTime(tracks[0], 241),
-        'development': beatIndexFromTime(tracks[0], 513),
-        'recap': beatIndexFromTime(tracks[0], 635),
-        'coda': beatIndexFromTime(tracks[0], 774),
+        'introduction': 0,
+        'exposition': 241,
+        'development': 513,
+        'recap': 635,
+        'coda': 774
     }
 
-    // Fourth movement form
+    formWords[1] = {
+        'test': 0,
+    }     
+
+    formWords[2] = {
+        'test': 0,
+    }     
+
     formWords[3] = {
-        'exposition': beatIndexFromTime(tracks[0], 0),
-        'development': beatIndexFromTime(tracks[0], 114),
-        'recap': beatIndexFromTime(tracks[0], 204),
-        'coda': beatIndexFromTime(tracks[0], 322),
+        'exposition': 0,
+        'development': 114,
+        'recap': 204,
+        'coda': 322
     }     
 
 
     // Load the various files
-    var remixedFlags = [true, false, false, false];
     var remixIndex = 0;
     function multipleRemix(tracks, trackIDs, trackURLs) {
-        if (remixedFlags[remixIndex] = false) {
-            // 10 second timer with recursive callback
-            console.log('waiting on ' + remixIndex);
-            setTimeout(multipleRemix(tracks, trackIDs, trackURLs), 10000);
-        }
-        else {
-            // do a remix!
-            remixer.remixTrackById(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
-                tracks[remixIndex] = t;
+        // do a remix!
+        remixer.remixTrackById(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
+            tracks[remixIndex] = t;
 
-                info(percent + "% of the track loaded...");
-                if (tracks[remixIndex].status == 'ok') {
-                    // Organize each segment by max chroma
-                    var chromaFloats = [];
-                    for (var i = 0; i < tracks[remixIndex].analysis.segments.length; i++ ) {
-                        chromaFloats = []
-                        for (var j = 0; j < tracks[remixIndex].analysis.segments[i].pitches.length; j++) {
-                            chromaFloats.push(parseFloat(tracks[remixIndex].analysis.segments[i].pitches[j]))
-                        }
-                        var maxVal = getMax(chromaFloats);
-                        var note = intsToNotes(chromaFloats.indexOf(maxVal))
-                        organizedSegments[remixIndex][note].push(tracks[remixIndex].analysis.segments[i]);
+            info(percent + "% of the track loaded...");
+            if (tracks[remixIndex].status == 'ok') {
+                // Organize each segment by max chroma
+                var chromaFloats = [];
+                for (var i = 0; i < tracks[remixIndex].analysis.segments.length; i++ ) {
+                    chromaFloats = []
+                    for (var j = 0; j < tracks[remixIndex].analysis.segments[i].pitches.length; j++) {
+                        chromaFloats.push(parseFloat(tracks[remixIndex].analysis.segments[i].pitches[j]))
                     }
-                    info('Ready!');
-                    remixIndex = remixIndex + 1;
-                    remixedFlags[remixIndex] = true;
-                    multipleRemix(tracks, trackIDs, trackURLs);
+                    var maxVal = getMax(chromaFloats);
+                    var note = intsToNotes(chromaFloats.indexOf(maxVal))
+                    organizedSegments[remixIndex][note].push(tracks[remixIndex].analysis.segments[i]);
                 }
-            });
-        }
+                info('Ready!');
+
+                // Get beat indexes for the form chart
+                for (section in formWords[remixIndex]) {
+                    formWords[remixIndex][section] = beatIndexFromTime(tracks[remixIndex], formWords[remixIndex][section]);
+                }
+
+                remixIndex = remixIndex + 1;
+                multipleRemix(tracks, trackIDs, trackURLs);
+            }
+        });
     }
 
     multipleRemix(tracks, trackIDs, trackURLs);
-
 
     // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
