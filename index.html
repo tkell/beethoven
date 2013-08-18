@@ -108,6 +108,15 @@ function parseInput(theString) {
         }
     }
     // and then things about the form of each movement can go here
+    // I will have to make this more complex:  basicaly I'll need to track the previous locations
+    // within each section. 
+
+    formKeys = formWords[currentMovement].keys();
+    for (var i = 0; i < formKeys.length; i++) {
+        if (words.indexOf(formKeys[i]) != -1) {
+             mappingIndexes[currentMovement] = formWords[currentMovement][formKeys[i]];
+        }
+    }
 
 
     // Assign any new words
