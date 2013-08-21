@@ -67,9 +67,28 @@ var startingText = "...what do you think of the Seventh Symphony?";
 var easterEggs = ['roll over']; // not done yet, may never be.
 
 var currentMovement = 0;
+var currentSubsection = 0;
 var mappings = {};
-var mappingIndexes = [0, 0, 0, 0];
+var mappingIndexes = [
+    [0, 241, 513, 635, 774], // intro, exp, dev, recap, coda
+    [0, 193, 283, 412, 455], // theme 1, theme 2, variation 1, variation 2, coda
+    [0, 134, 280, 357, 460], // scherzo, trio, scherzo, trio, scherzo
+    [0, 114, 204, 322],
+];
+
 var formWords = [{}, {}, {}, {}];
+formWords[0] = {'introduction': 0, 'exposition': 1, 'development': 2, 'recap': 3, 'coda': 4};
+formWords[1] = {'theme 1': 0, 'theme one': 0, 'first theme': 0,    
+        'theme 2': 1, 'theme two': 1, 'second theme': 1,
+        'variation 1': 2, 'variation one': 2, 'first variation': 2,
+        'variation 2': 3, 'variation two': 3, 'second variation': 3,
+        'coda': 4
+}
+formWords[2] = {'scherzo': 0,'trio': 1, 'a section': 0, 'b section': 1,
+        'first a section': 0, 'first b section': 1, 'second a section': 2,
+        'second b section': 3, 'third a section': 4
+}
+formWords[3] = {'exposition': 0, 'development': 1, 'recap': 2, 'coda': 3};
 
 
 function parseInput(theString) {
@@ -90,21 +109,27 @@ function parseInput(theString) {
 
         if (before == 'first' || before == 'opening' || before == '1st' || after == 'i' || after == '1' || after == 'one') {
           currentMovement = 0;
+          currentSubsection = 0;
         }
         else if (before == 'second' || before == '2nd' || after == 'ii' || after == '2' || after == 'two') {
           currentMovement = 1;
+          currentSubsection = 0;
         }
         else if (before == 'third' || before == '3rd' || after == 'iii' || after == '3' || after == 'three') {
           currentMovement = 2;
+          currentSubsection = 0;
         }
         else if (before == 'fourth' || before == 'last' || before == 'final' ||before == '4th' || after == 'iv' || after == '4' || after == 'four') {
           currentMovement = 3;
+          currentSubsection = 0;
         }
         else if (before == 'previous' && currentMovement != 0) {
           currentMovement = currentMovement - 1;
+          currentSubsection = 0;
         }
         else if (before == 'next' && currentMovement != 3) {
           currentMovement = currentMovement + 1;
+          currentSubsection = 0;
         }
     }
     // and then things about the form of each movement can go here
@@ -115,7 +140,7 @@ function parseInput(theString) {
     formKeys = Object.keys(formWords[currentMovement]);
     for (var i = 0; i < formKeys.length; i++) {
         if (words.indexOf(formKeys[i]) != -1 || lowerString.indexOf(formKeys[i]) != -1) {
-             mappingIndexes[currentMovement] = formWords[currentMovement][formKeys[i]];
+            currentSubsection = formWords[currentMovement][formKeys[i]]
         }
     }
 
@@ -126,9 +151,9 @@ function parseInput(theString) {
         var word = words[i].toLowerCase();
       if (mappings.hasOwnProperty(word) == false) {
           var numberOfBeats = parseInt((word.length / 3) + 1);
-          var index = mappingIndexes[currentMovement];
+          var index = mappingIndexes[currentMovement][currentSubsection];
           mappings[word] = tracks[currentMovement].analysis.beats.slice(index, index + numberOfBeats);
-          mappingIndexes[currentMovement] = mappingIndexes[currentMovement] + numberOfBeats;
+          mappingIndexes[currentMovement][currentSubsection] = mappingIndexes[currentMovement][currentSubsection] + numberOfBeats;
         }
         playback = playback.concat(mappings[word]);
     }
@@ -137,7 +162,7 @@ function parseInput(theString) {
     convolver.buffer = convolutionBuffers[currentMovement];
 
     // Play things!  in sequence for now.
-    // What to do about those clicks?  maybe move it all to segments?
+    // What to do about those clicks?
     player.play(0, playback);
 }
 
@@ -181,52 +206,6 @@ $(document).ready(function(){
         }
     }
 
-
-    // Create our form lists
-    formWords[0] = {
-        'introduction': 0,
-        'exposition': 241,
-        'development': 513,
-        'recap': 635,
-        'coda': 774
-    }
-
-    formWords[1] = {
-        'theme 1': 0,
-        'theme one': 0,
-        'first theme': 0,
-        'theme 2': 193,
-        'theme two': 193,
-        'second theme': 193,
-        'variation 1': 283,
-        'variation one': 283,
-        'first variation': 283,
-        'variation 2': 412,
-        'variation two': 412,
-        'second variation': 412,
-        'coda': 455
-    }     
-
-    formWords[2] = {
-        'scherzo': 0,
-        'trio': 134,
-        'a section': 0,
-        'b section': 134,
-        'first a section': 0,
-        'first b section': 134,
-        'second a section': 280,
-        'second b section': 357,
-        'third a section': 460
-    }     
-
-    formWords[3] = {
-        'exposition': 0,
-        'development': 114,
-        'recap': 204,
-        'coda': 322
-    }     
-
-
     // Load the various files
     var remixIndex = 0;
     function multipleRemix(tracks, trackIDs, trackURLs) {
@@ -248,10 +227,9 @@ $(document).ready(function(){
                     organizedSegments[remixIndex][note].push(tracks[remixIndex].analysis.segments[i]);
                 }
                 
-
                 // Get beat indexes for the form chart
-                for (section in formWords[remixIndex]) {
-                    formWords[remixIndex][section] = beatIndexFromTime(tracks[remixIndex], formWords[remixIndex][section]);
+                for (var i =0; i < mappingIndexes[remixIndex].length) {
+            mappingIndexes[remixIndex][i] = beatIndexFromTime(tracks[remixIndex], mappingIndexes[remixIndex][i]);
                 }
 
                 remixIndex = remixIndex + 1;
