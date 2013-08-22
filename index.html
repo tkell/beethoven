@@ -100,7 +100,7 @@ function parseInput(theString) {
     for (var i = 0; i < words.length; i++) {
         words[i] = words[i].replace(/[\.\?,\"\'-\/#!$%\^&\*;:{}=\-_`~()]/g,"")
     }
-     // Move the 'play head' based on the word before or after 'movement'
+    // Update the movement
     if (words.indexOf('movement') != -1) {
         var before = '';
         var after = '';
@@ -132,18 +132,14 @@ function parseInput(theString) {
           currentSubsection = 0;
         }
     }
-    // and then things about the form of each movement can go here
-    // I will have to make this more complex:  basicaly I'll need to track the previous locations
-    // within each section. 
-    /// Gah, this is hard because I have many words that mean the same thing hmrmmrmr.
 
+    // Update the form
     formKeys = Object.keys(formWords[currentMovement]);
     for (var i = 0; i < formKeys.length; i++) {
         if (words.indexOf(formKeys[i]) != -1 || lowerString.indexOf(formKeys[i]) != -1) {
             currentSubsection = formWords[currentMovement][formKeys[i]]
         }
     }
-
 
     // Assign any new words
     var playback = [];
@@ -160,10 +156,27 @@ function parseInput(theString) {
 
     // Update the convolver
     convolver.buffer = convolutionBuffers[currentMovement];
+    // concatenate consecutive chuncks to avoid clicks
+    var newPlayback = [];
+    var i = 0;
+    var j = 0;
+    newPlayback.push(playback[i]);
 
-    // Play things!  in sequence for now.
-    // What to do about those clicks?
-    player.play(0, playback);
+    while (i < playback.length - 1) {
+        a = parseFloat(playback[i].start) + parseFloat(playback[i].duration);
+        b = parseFloat(playback[i + 1].start);
+        if (Math.abs(a - b) < 0.001) {
+            newPlayback[j].duration = parseFloat(newPlayback[j].duration) + parseFloat(playback[i + 1].duration);
+            i = i + 1;
+        } else {
+            i = i + 1;
+            newPlayback.push(playback[i]);
+            j = j + 1;
+        }
+    }
+
+    // Play things!
+    player.play(0, newPlayback);
 }
 
 $(document).ready(function(){
