@@ -1,0 +1,24 @@
+
+body {
+    padding: 15px;
+    background-color:'snow';
+    text-align: center;
+    font-family: 'Courier New', monospace;  
+}
+
+div#title{
+    font-family: 'Monsieur La Doulaise', cursive;
+    font-size: 64px;
+}
+
+div#text-log{
+    margin: 30px;
+}
+
+div#text-input{
+    margin: 30px;
+}
+
+p#about{
+   font-size: 80%;
+}
