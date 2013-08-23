@@ -1,44 +1,65 @@
 
 body {
     padding: 15px;
-    background-color:'snow';
+    background-color: #F8F8FF;
     text-align: center;
     font-family: 'Courier New', monospace;  
 }
 
+a:link {color:#000000;}      /* unvisited link */
+a:visited {color:#000000;}  /* visited link */
+a:hover {color:#000000;}  /* mouse over link */
+a:active {color:#000000;}  /* selected link */
+
 div#title{
     font-family: 'Monsieur La Doulaise', cursive;
     font-size: 64px;
+    margin-bottom: 60px;
 }
 
-span.even{
-    text-align: right;
+div#splash-image{
+    float:left;
+    margin-left: 100px;
+    margin-bottom: 30px;
+}
+
+
+div#text-log{
+    width: 480px;
+    margin-left: auto;
+    margin-right: 100px;
     float: right;
-    color: #00008B;
-    margin-bottom: 10px;
-    clear: both;
+    margin-bottom: 30px;
+
 }
 
 span.odd{
     text-align: left;
     float: left;
-    color: #007A00;    
+    font-size: 20px;
+    color: #FF0909;    
     margin-bottom: 10px;
     clear: both;
 }
 
-div#text-log{
-    width: 640px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 30px;
-    margin-bottom: 30px;
+span.even{
+    text-align: right;
+    float: right;
+    font-size: 20px;
+    color: #8B4726;
+    margin-bottom: 10px;
+    clear: both;
 }
 
+
 div#text-input{
+    clear: both;
     margin: 30px;
 }
 
+div#info{
+   font-size: 80%;
+}
 p#about{
    font-size: 80%;
 }

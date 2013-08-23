@@ -12,7 +12,6 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript" src='remix.js'></script>
 <script type="text/javascript" src='buffer-loader.js'></script>
-<script type="text/javascript" src='img-64.js'></script>
 
 <script type="text/javascript">
 // Helpers
@@ -94,7 +93,11 @@ formWords[3] = {'exposition': 0, 'development': 1, 'recap': 2, 'coda': 3};
 
 var inputCount = 0;
 
+var canvas;
+var canvasContext;
+
 function parseInput(theString) {
+
     letters = theString.split('');
     lowerString = theString.toLowerCase();
     words = lowerString.split(' ');
@@ -172,6 +175,16 @@ function parseInput(theString) {
             newPlayback[j].duration = parseFloat(newPlayback[j].duration) + parseFloat(playback[i + 1].duration);
             i = i + 1;
         } else {
+            // 369x by 482y
+            // tweak image on discontinuties
+            xFrom = Math.floor(playback[i].start * 369 * j) % 369;
+            yFrom = Math.floor(playback[i].start * 482 * i) % 482;
+            size = Math.floor(playback[i].duration * 10);
+            var imgData = canvasContext.getImageData(xFrom, yFrom, size, size);
+            xTo = Math.floor(playback[i + 1].start * 369 * i) % 369;
+            yTo = Math.floor(playback[i + 1].start * 482 * j) % 482;
+            canvasContext.putImageData(imgData, xTo, yTo);
+            // Iterate!
             i = i + 1;
             newPlayback.push(playback[i]);
             j = j + 1;
@@ -180,13 +193,20 @@ function parseInput(theString) {
 
     // Play things!
     player.play(0, newPlayback);
+
 }
 
 $(document).ready(function(){
     $("#textarea-input").val(startingText);
 
     // Load the image
-    $("img#new-splash")).attr("src", theImage);
+    var cat = new Image();
+    cat.src = "beethoven.jpg";
+    canvas = document.getElementById("splash-canvas");
+    canvasContext = canvas.getContext("2d");
+    cat.onload = function() {
+        canvasContext.drawImage(cat, 0, 0);
+    };
 
     // load things into remix
     var context = new webkitAudioContext();
@@ -232,7 +252,7 @@ $(document).ready(function(){
         remixer.remixTrackById(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
             tracks[remixIndex] = t;
 
-            info(percent + "% of the track loaded...");
+            info(percent + "% of the movement loaded...");
             if (tracks[remixIndex].status == 'ok') {
                 // Organize each segment by max chroma
                 var chromaFloats = [];
@@ -253,12 +273,12 @@ $(document).ready(function(){
 
                 remixIndex = remixIndex + 1;
                 if (remixIndex < tracks.length) {
-                    info('Loaded track ' + (remixIndex + 1));
+                    info('Loaded movement ' + (remixIndex + 1) + ', running Schenkerian analysis...');
                     multipleRemix(tracks, trackIDs, trackURLs);
                 }
                 else                 {
                     $('#textarea-input').prop('disabled', false)
-                    info('All tracks loaded and remixed - ready');
+                    info('All movements loaded and analyzed.  Please begin.');
                 }               
             }
         });
@@ -275,7 +295,7 @@ $(document).ready(function(){
 
             var currentText = $('#text-log').html();
             var textArray = currentText.split('<br>');
-            if (textArray.length > 6) {
+            if (textArray.length > 8) {
                  textArray.shift();   
             }
 
@@ -326,7 +346,7 @@ $(document).ready(function(){
 </script>
 
 <div id="splash-image">
-    <img src="splash.jpg">
+    <canvas id="splash-canvas" width="369" height="482"></canvas>
 </div>
 
 <div id="text-log">
@@ -344,16 +364,12 @@ What We Talk About When We Talk About Beethoven
 <div id="info">
 </div>
 
-<img id="new-splash" src="">
-
-
-
-
-
 <div id="about">
-<p> What We Talk About When We Talk About Beethoven is a piece for human and human.  </p>
+<p> <strong>What We Talk About When We Talk About Beethoven</strong> is a piece for human and human.  </p>
 <p>Exchange messages, one by one, on the topic given above. </p>
-<p id="about">WWTAWWTAB works best in Chrome. Powered by The Echo Nest & remix.js</p>
+<p id="about">WWTAWWTAB works best in Chrome. Powered by <a href="http://the.echonest.com">The Echo Nest</a> & 
+    <a href="http://echonest.github.io/remix/javascript">remix.js</a>
+</p>
 </div>
 </body>
 
