@@ -12,6 +12,7 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script type="text/javascript" src='remix.js'></script>
 <script type="text/javascript" src='buffer-loader.js'></script>
+<script type="text/javascript" src='img-64.js'></script>
 
 <script type="text/javascript">
 // Helpers
@@ -184,6 +185,9 @@ function parseInput(theString) {
 $(document).ready(function(){
     $("#textarea-input").val(startingText);
 
+    // Load the image
+    $("img#new-splash")).attr("src", theImage);
+
     // load things into remix
     var context = new webkitAudioContext();
     remixer = createJRemixer(context, $, apiKey);
@@ -339,6 +343,11 @@ What We Talk About When We Talk About Beethoven
 
 <div id="info">
 </div>
+
+<img id="new-splash" src="">
+
+
+
 
 
 <div id="about">
