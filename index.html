@@ -162,11 +162,16 @@ function parseInput(theString) {
 
     // Update the convolver
     convolver.buffer = convolutionBuffers[currentMovement];
-    // concatenate consecutive chuncks to avoid clicks
+
+    // Concatenate consecutive chuncks to avoid clicks
     var newPlayback = [];
     var i = 0;
     var j = 0;
-    newPlayback.push(playback[i]);
+    // I need start, duration, & track.buffer, right?  Is that the minimal set of things needed to play?
+    //
+    var tempTrack = {'buffer': playback[i].track.buffer};
+    var test = {'start': playback[i].start, 'duration': playback[i].duration, 'track':  tempTrack};
+    newPlayback.push(test);
 
     while (i < playback.length - 1) {
         a = parseFloat(playback[i].start) + parseFloat(playback[i].duration);
@@ -186,7 +191,9 @@ function parseInput(theString) {
             canvasContext.putImageData(imgData, xTo, yTo);
             // Iterate!
             i = i + 1;
-            newPlayback.push(playback[i]);
+            var tempTrack = {'buffer': playback[i].track.buffer};
+            var test = {'start': playback[i].start, 'duration': playback[i].duration, 'track':  tempTrack};
+            newPlayback.push(test);
             j = j + 1;
         }
     }
