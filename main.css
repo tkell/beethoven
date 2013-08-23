@@ -11,8 +11,28 @@ div#title{
     font-size: 64px;
 }
 
+span.even{
+    text-align: right;
+    float: right;
+    color: #00008B;
+    margin-bottom: 10px;
+    clear: both;
+}
+
+span.odd{
+    text-align: left;
+    float: left;
+    color: #007A00;    
+    margin-bottom: 10px;
+    clear: both;
+}
+
 div#text-log{
-    margin: 30px;
+    width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
 
 div#text-input{

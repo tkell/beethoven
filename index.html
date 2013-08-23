@@ -91,6 +91,7 @@ formWords[2] = {'scherzo': 0,'trio': 1, 'a section': 0, 'b section': 1,
 }
 formWords[3] = {'exposition': 0, 'development': 1, 'recap': 2, 'coda': 3};
 
+var inputCount = 0;
 
 function parseInput(theString) {
     letters = theString.split('');
@@ -264,22 +265,29 @@ $(document).ready(function(){
     // Take user input, update the UI, and parse the input
     $("#textarea-input").keyup(function(e) {
         if (e.which == 13) {
+            inputCount = inputCount + 1;
             var theString = $("#textarea-input").val();
             theString = trim(theString);
 
             var currentText = $('#text-log').html();
             var textArray = currentText.split('<br>');
-            if (textArray.length > 10) {
+            if (textArray.length > 6) {
                  textArray.shift();   
             }
 
-            currentText = ''
+            var currentText = '';
             for (var i = 0; i < textArray.length; i++) {
                 currentText = currentText + textArray[i] + '<br>';
             }
 
-            var newHtml = currentText + theString
-            $('#text-log').html(newHtml);
+            if (inputCount % 2 == 0) {
+                rowType = 'even';
+            } else {
+                rowType = 'odd';
+            }
+
+            currentText = currentText + '<span class=' + rowType + '>'  + theString + '</span>';
+            $('#text-log').html(currentText);
             $("#textarea-input").val("");
 
             parseInput(theString);
