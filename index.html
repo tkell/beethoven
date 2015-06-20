@@ -237,7 +237,7 @@ $(document).ready(function(){
     bufferLoader.load();
 
     // Add a gain to keep things backgrounded.
-    var filterGain = context.createGainNode();
+    var filterGain = context.createGain();
     filterGain.gain.value = 0.35;
 
     player = remixer.getPlayer();

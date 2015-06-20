@@ -7,27 +7,90 @@ function createJRemixer(context, jquery, apiKey) {
     $.ajaxSetup({ cache: false });
 
     var remixer = {
+        // If you have an EN TRack ID and the location of the audio.
         remixTrackById: function(trackID, trackURL, callback) {
             var track;
             var url = 'http://developer.echonest.com/api/v4/track/profile?format=json&bucket=audio_summary'
-            $.getJSON(url, {id:trackID, api_key:apiKey}, function(data) {
-                var analysisURL = data.response.track.audio_summary.analysis_url;
-                track = data.response.track;
-                
-                // This call is proxied through the yahoo query engine.  
-                // This is temporary, but works.
-                $.getJSON("http://query.yahooapis.com/v1/public/yql", 
-                    { q: "select * from json where url=\"" + analysisURL + "\"", format: "json"}, 
-                    function(data) {
-                        if (data.query.results != null) {
-                            track.analysis = data.query.results.json;
-                            remixer.remixTrack(track, trackURL, callback);   
-                        }
-                        else {
-                            callback(track, "Error:  no analysis data returned for that track - 0 ");  
-                            console.log('error', 'No analysis data returned:  try again, or try another trackID');
-                        }
+
+           var retryCount = 3;
+           var retryInterval = 3000;
+
+            function lookForAnalysis(trackID, trackURL, callback) {
+                $.getJSON(url, {id:trackID, api_key:apiKey}, function(data) {
+                    var analysisURL = data.response.track.audio_summary.analysis_url;
+                    track = data.response.track;
+                    
+                    // This call is proxied through the yahoo query engine.  
+                    // This is temporary, but works.
+                    $.getJSON("http://query.yahooapis.com/v1/public/yql", 
+                        { q: "select * from json where url=\"" + analysisURL + "\"", format: "json"}, 
+                        function(data) {
+                            if (data.query.results != null) {
+                                track.analysis = data.query.results.json;
+                                console.log("Analysis obtained...");
+                                remixer.remixTrack(track, trackURL, callback);   
+                            }
+                            else {
+                                retryCount = retryCount - 1;
+                                retryInterval = retryInterval + retryInterval;
+                                if (retryCount > 0) {
+                                    console.log('Analysis pending, trying again')
+                                    callback(track, "Analysis pending, retrying - 0");  
+                                    setTimeout(function () {
+                                        lookForAnalysis(trackID, trackURL, callback);
+                                    }, retryInterval);
+                                } else {
+                                    callback(track, "Error:  no analysis data returned for that track - 0");  
+                                    console.log('error', 'No analysis data returned:  try again, or try another trackID');   
+                                }
+                            }
+                    }); // end yahoo proxy getJson
                 });
+            } // end lookForAnalysis
+            lookForAnalysis(trackID, trackURL, callback);
+        },
+
+        // If you have a SoundCloud URL.
+        remixTrackBySoundCloudURL: function(soundCloudURL, soundClouddClientID, callback) {
+           var bridgeURL = "http://labs.echonest.com/SCAnalyzer/analyze?id=" + soundCloudURL;
+           var retryCount = 3;
+           var retryInterval = 2000;
+
+           function lookForTrackID(bridgeURL, soundClouddClientID, callback) {
+                $.getJSON(bridgeURL, function(data) {
+                    if (data.status == "OK") {
+                        var trackID = data.trid;
+                        var scResolveURL = 'http://api.soundcloud.com/resolve.json'
+                        $.getJSON(scResolveURL, {client_id:soundClouddClientID, url:soundCloudURL}, function(data) {
+                            var downloadURL = data.stream_url + '?client_id=' + soundClouddClientID;
+                            console.log('got all data from SoundCloud, about to start remix');  
+                            remixer.remixTrackById(trackID, downloadURL, callback);
+                        });
+                    } else {
+                        retryCount = retryCount - 1;
+                        retryInterval = retryInterval + retryInterval;
+                        if (retryCount > 0) {
+                            setTimeout(function () {
+                                lookForTrackID(bridgeURL, soundClouddClientID, callback);
+                            }, retryInterval);
+                        } else {
+                            callback(track, "Error:  no trackID returned.");  
+                            console.log('error', 'no trackID returned.');       
+                        }
+                     } // end else
+                });
+            }
+            lookForTrackID(bridgeURL, soundClouddClientID, callback);
+        },
+
+        // If you have the analysis URL already, or if you've cached it in your app.
+        // Be *very* careful when searching for analysis URL by song:  it may not match the track being used.  
+        remixTrackByURL: function(analysisURL, trackURL, callback) {
+            var track = new Object();
+            $.getJSON(analysisURL, function(data) {
+                track.analysis = data;
+                track.status = "complete";
+                remixer.remixTrack(track, trackURL, callback);
 
             });
         },
@@ -42,6 +105,7 @@ function createJRemixer(context, jquery, apiKey) {
                 this.request = request;
 
                 request.onload = function() {
+
                     trace('audio loaded');
                      if (false) {
                         track.buffer = context.createBuffer(request.response, false);
@@ -80,10 +144,24 @@ function createJRemixer(context, jquery, apiKey) {
                     trace('preprocessTrack ' + type);
                     for (var j in track.analysis[type]) {
                         var qlist = track.analysis[type]
-
                         j = parseInt(j)
-
                         var q = qlist[j]
+
+                        q.start = parseFloat(q.start);
+                        q.duration = parseFloat(q.duration);
+                        q.confidence = parseFloat(q.confidence);
+                        if (type == 'segments') {
+                            q.loudness_max = parseFloat(q.loudness_max);
+                            q.loudness_max_time = parseFloat(q.loudness_max_time);
+                            q.loudness_start = parseFloat(q.loudness_start);
+
+                            for (var k = 0; k < q.pitches.length; k++) {
+                                q.pitches[k] = parseFloat(q.pitches[k]);
+                            }
+                            for (var k = 0; k < q.timbre.length; k++) {
+                                q.timbre[k] = parseFloat(q.timbre[k]);
+                            }
+                        }
                         q.track = track;
                         q.which = j;
                         if (j > 0) {
@@ -194,11 +272,11 @@ function createJRemixer(context, jquery, apiKey) {
                     for (var j = last; j < segs.length; j++) {
                         var qseg = segs[j];
                         // seg starts before quantum so no
-                        if ((qseg.start + qseg.duration) < q.start) {
+                        if (parseFloat(qseg.start) + parseFloat(qseg.duration) < parseFloat(q.start)) {
                             continue;
                         }
                         // seg starts after quantum so no
-                        if (qseg.start > (q.start + q.duration)) {
+                        if (parseFloat(qseg.start) > parseFloat(q.start) + parseFloat(q.duration)) {
                             break;
                         }
                         last = j;
@@ -218,7 +296,7 @@ function createJRemixer(context, jquery, apiKey) {
 
         getPlayer : function(effects) {
             var queueTime = 0;
-            var audioGain = context.createGainNode();
+            var audioGain = context.createGain();
             var curAudioSource = null;
             var currentlyQueued = new Array();
             var curQ = null;
@@ -227,8 +305,7 @@ function createJRemixer(context, jquery, apiKey) {
             var currentTriggers = new Array();
             audioGain.gain.value = 1;
 
-            // aha.  Put them here, after the gain knob
-            // OR, put them into each player call?  That seems lousy
+            // Connect effects
             effects = effects || [];
             effects.unshift(audioGain);
             for (var i = 0; i < effects.length -1; i++) {
@@ -243,7 +320,7 @@ function createJRemixer(context, jquery, apiKey) {
                     audioSource.buffer = q;
                     audioSource.connect(audioGain);
                     currentlyQueued.push(audioSource);
-                    audioSource.noteOn(when);
+                    audioSource.start(when);
                     if (onPlayCallback != null) {
                         theTime = (when - context.currentTime) *  1000;
                         currentTriggers.push(setTimeout(onPlayCallback, theTime));
@@ -268,7 +345,7 @@ function createJRemixer(context, jquery, apiKey) {
                     audioSource.connect(audioGain);
                     q.audioSource = audioSource;
                     currentlyQueued.push(audioSource);
-                    audioSource.noteGrainOn(when, q.start, q.duration);
+                    audioSource.start(when, q.start, q.duration);
 
                     // I need to clean up all these ifs
                     if ("syncBuffer" in q) {
@@ -276,7 +353,7 @@ function createJRemixer(context, jquery, apiKey) {
                         audioSource.buffer = q.syncBuffer;
                         audioSource.connect(audioGain);
                         currentlyQueued.push(audioSource);
-                        audioSource.noteOn(when);
+                        audioSource.start(when);
                     }
 
                     if (onPlayCallback != null) {
@@ -303,7 +380,7 @@ function createJRemixer(context, jquery, apiKey) {
             }
 
             var player = {
-                play: function(when, q, effects) {
+                play: function(when, q) {
                     return queuePlay(0, q);
                 },
 
@@ -330,7 +407,7 @@ function createJRemixer(context, jquery, apiKey) {
                 stop: function() {
                     for (var i = 0; i < currentlyQueued.length; i++) {
                         if (currentlyQueued[i] != null) {
-                            currentlyQueued[i].noteOff(0);
+                            currentlyQueued[i].stop();
                         }
                     }
                     currentlyQueued = new Array();
