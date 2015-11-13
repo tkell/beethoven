@@ -50,7 +50,7 @@ function info(str) {
 }
 
 var apiKey = 'WOUHTN44BMS5SMPF2';
-var trackIDs = ['TRKXYVL13F72A49B87', 'TRMAPVN1408A307A04', 'TRBVPWY1408A33440C', 'TRVTOJT1408A35EDFA'];
+var trackIDs = ['TRKXYVL13F72A49B87.json', 'TRMAPVN1408A307A04.json', 'TRBVPWY1408A33440C.json', 'TRVTOJT1408A35EDFA.json'];
 var trackURLs = ['audio/beethoven_7_I.mp3', 'audio/beethoven_7_II.mp3', 'audio/beethoven_7_III.mp3', 'audio/beethoven_7_IV.mp3']
 
 var convolver;
@@ -256,7 +256,7 @@ $(document).ready(function(){
     var remixIndex = 0;
     function multipleRemix(tracks, trackIDs, trackURLs) {
         // do a remix!
-        remixer.remixTrackById(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
+        remixer.remixTrackByURL(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
             tracks[remixIndex] = t;
 
             info(percent + "% of the movement loaded...");
