@@ -216,12 +216,12 @@ $(document).ready(function(){
     };
 
     // load things into remix
-    var context = new webkitAudioContext();
+    var context = new AudioContext();
     remixer = createJRemixer(context, $, apiKey);
 
     // Create the filter
     var filter = context.createBiquadFilter();
-    filter.type = 0; // Low-pass filter. 
+    filter.type = "lowpass";
     filter.frequency.value = 1760; 
 
     // Load the convolver
@@ -259,7 +259,7 @@ $(document).ready(function(){
         remixer.remixTrackByURL(trackIDs[remixIndex], trackURLs[remixIndex], function(t, percent) {
             tracks[remixIndex] = t;
 
-            info(percent + "% of the movement loaded...");
+            info("Loading movement...");
             if (tracks[remixIndex].status == 'ok') {
                 // Organize each segment by max chroma
                 var chromaFloats = [];
